@@ -13,11 +13,12 @@ EditorBuildSettings:
     guid: f324d549a2144654bb8a3222fd7d3918
   - enabled: 1
     path: Assets/Scenes/Game02.unity
-    guid: 2324518937e3b45459202e81300deb73
+    guid: ea9935a996bd8a442a6d2183c3d46332
   - enabled: 1
     path: Assets/Scenes/Game03.unity
-    guid: 9bc8ade78e19d94489ea866f77dc4f26
+    guid: 5c591e4b958119a4bbfbf1b939ea21b4
   - enabled: 1
     path: Assets/Scenes/Game04.unity
-    guid: 7957adc9cc2c6d74aa16b6ae77554779
-  m_configObjects: {}
+    guid: 0aa7dac0f0c7f9c44b5a779c34dc5f92
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: e9e5a943616d3bb45bb256684327f690, type: 2}
