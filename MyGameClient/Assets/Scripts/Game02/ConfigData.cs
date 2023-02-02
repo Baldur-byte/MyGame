@@ -10,6 +10,8 @@ namespace Game02
 
         public const string PREFABS_PATH = "Game02/Prefabs/";
 
+        public const string FRUITS_PATH = "Game02/Textures/fruits/";
+
         public const int CELL_SIZE = 100;
 
         public const float CELL_OFFSET = 1;

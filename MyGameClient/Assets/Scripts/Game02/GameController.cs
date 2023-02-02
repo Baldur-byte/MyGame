@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-
 namespace Game02
 {
     public partial class GameController : MonoBehaviour
@@ -15,8 +14,6 @@ namespace Game02
         private List<GameObject> itemObjectPool;
 
         private List<ItemBase> itemsToEliminate;
-
-        string[] prefabNames = { "Fruit01", "Fruit02", "Fruit03", "Fruit04", "Fruit05", "Fruit06", "IceBlock" };
 
         private float eliminatedTime = 0.2f;
 
@@ -46,7 +43,7 @@ namespace Game02
                 List<ItemBase> temp = new List<ItemBase> ();
                 for (int columIndex = 0; columIndex < ConfigData.COLUMN_COUNT; columIndex++)
                 {
-                    FruitItem item = getRandomCellItem(rowIndex, columIndex);
+                    FruitItem item = createRandomCellItem(rowIndex, columIndex);
                     setCellPositonWithAni(item);
                     temp.Add(item);
                 }
@@ -55,24 +52,17 @@ namespace Game02
             StartCoroutine(autoCheckMap());
         }
 
-        private FruitItem getRandomCellItem(int row, int col)
+        private FruitItem createRandomCellItem(int row, int colum)
         {
-            int id = Random.Range(1, 6);
-            GameObject itemObject = new GameObject($"item({row},{col})");
-            itemObject.transform.SetParent(FruitRoot);
             //TODO:待优化
-            GameObject sprite = Resources.Load<GameObject>(ConfigData.PREFABS_PATH + prefabNames[id]);
-            sprite = Instantiate(sprite);
-            sprite.transform.SetParent(itemObject.transform);
-
-            FruitItem item = itemObject.AddComponent<FruitItem>();
-            item.SetItem((ItemType)id, row, col);
+            FruitItem item = Instantiate(Resources.Load<FruitItem>(ConfigData.PREFABS_PATH + "Fruit"), FruitRoot);
+            item.InitItem(row, colum);
             return item;
         }
 
         private void setCellPositonWithAni(ItemBase item, bool isWithAni = false)
         {
-            float x = (item.colIndex - ConfigData.COLUMN_COUNT / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
+            float x = (item.columnIndex - ConfigData.COLUMN_COUNT / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
             float y = (item.rowIndex - ConfigData.ROW_COUNT / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
             //float x = (item.colIndex - ConfigData.COLUMN_COUNT / 2) * ConfigData.CELL_OFFSET + ConfigData.CELL_OFFSET / 2;
             //float y = (item.rowIndex - ConfigData.ROW_COUNT / 2) * ConfigData.CELL_OFFSET + ConfigData.CELL_OFFSET / 2;
@@ -88,6 +78,7 @@ namespace Game02
 
         private IEnumerator autoCheckMap()
         {
+            InputLockManager.Instance.Lock();
             if (checkHorizontalMatch() || checkVerticalMatch())
             {
                 // 消除匹配的
@@ -103,6 +94,7 @@ namespace Game02
                 yield return autoCheckMap();
             }
             yield return null;
+            InputLockManager.Instance.UnLock();
         }
 
         private void RemoveMatchCell()
@@ -117,16 +109,14 @@ namespace Game02
         {
             for (int i = 0; i < itemsToEliminate.Count; i++)
             {
-                if (itemsToEliminate[i].ItemType == ItemType.Eliminated)
+                if (itemsToEliminate[i].ItemType == ItemType.EliminatedCell)
                 {
                     var fruit = itemsToEliminate[i] as FruitItem;
                     for (int j = fruit.rowIndex + 1; j < ConfigData.ROW_COUNT; ++j)
                     {
-                        var item = GetFruitItem(j, fruit.colIndex);
+                        var item = GetFruitItem(j, fruit.columnIndex);
                         item.rowIndex--;
-                        items[item.rowIndex][item.colIndex] = item;
-                        item.gameObject.name = $"item({item.rowIndex},{item.colIndex})";
-                        setCellPositonWithAni(item, true);
+                        refreshItem(item);
                     }
                     ReuseRemovedCell(fruit);
                 }
@@ -136,12 +126,10 @@ namespace Game02
         private void ReuseRemovedCell(FruitItem item)
         {
             Destroy(item.gameObject);
-            item = getRandomCellItem(ConfigData.ROW_COUNT, item.colIndex);
+            item = createRandomCellItem(ConfigData.ROW_COUNT, item.columnIndex);
             setCellPositonWithAni(item);
-            item.rowIndex--;
-            items[item.rowIndex][item.colIndex] = item;
-            item.gameObject.name = $"item({item.rowIndex},{item.colIndex})";
-            setCellPositonWithAni(item, true);
+            item.rowIndex--; 
+            refreshItem(item);
         }
 
         private bool checkHorizontalMatch()
@@ -154,12 +142,12 @@ namespace Game02
                     var item1 = GetFruitItem(rowIndex, columIndex);
                     var item2 = GetFruitItem(rowIndex, columIndex + 1);
                     var item3 = GetFruitItem(rowIndex, columIndex + 2);
-                    if (item1.ItemType == item2.ItemType && item2.ItemType == item3.ItemType)
+                    if (item1.FruitType == item2.FruitType && item2.FruitType == item3.FruitType)
                     {
                         isMatch = true;
-                        AddMatchCell(item1);
-                        AddMatchCell(item2);
-                        AddMatchCell(item3);
+                        AddMatchItem(item1);
+                        AddMatchItem(item2);
+                        AddMatchItem(item3);
                     }
                 }
             }
@@ -176,27 +164,27 @@ namespace Game02
                     var item1 = GetFruitItem(rowIndex, columIndex);
                     var item2 = GetFruitItem(rowIndex + 1, columIndex);
                     var item3 = GetFruitItem(rowIndex + 2, columIndex);
-                    if (item1.ItemType == item2.ItemType && item2.ItemType == item3.ItemType)
+                    if (item1.FruitType == item2.FruitType && item2.FruitType == item3.FruitType)
                     {
                         isMatch = true;
-                        AddMatchCell(item1);
-                        AddMatchCell(item2);
-                        AddMatchCell(item3);
+                        AddMatchItem(item1);
+                        AddMatchItem(item2);
+                        AddMatchItem(item3);
                     }
                 }
             }
             return isMatch;
         }
 
-        private FruitItem GetFruitItem(int rowIndex, int columIndex)
+        private FruitItem GetFruitItem(int rowIndex, int columnIndex)
         {
             if (rowIndex < 0 || rowIndex >= items.Count) return null;
             var temp = items[rowIndex];
-            if (columIndex < 0 || columIndex >= temp.Count) return null;
-            return temp[columIndex] as FruitItem;
+            if (columnIndex < 0 || columnIndex >= temp.Count) return null;
+            return temp[columnIndex] as FruitItem;
         }
 
-        private void AddMatchCell(FruitItem fruit)
+        private void AddMatchItem(FruitItem fruit)
         {
             if(null == itemsToEliminate)
             {
@@ -208,6 +196,11 @@ namespace Game02
             }
         }
 
-
+        private void refreshItem(ItemBase item)
+        {
+            items[item.rowIndex][item.columnIndex] = item;
+            item.gameObject.name = $"item({item.rowIndex},{item.columnIndex})";
+            setCellPositonWithAni(item, true);
+        }
     }
 }

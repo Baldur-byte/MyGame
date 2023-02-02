@@ -5,22 +5,27 @@ namespace Game02
     public abstract class ItemBase : MonoBehaviour
     {
         public int rowIndex { get; set; }
-        public int colIndex { get; set; }
+        public int columnIndex { get; set; }
 
         public ItemType ItemType { get; set; }
 
         public abstract void Eliminated();
 
-        public void SetItem(ItemType itemType, int row, int col)
+        protected void SetItemPos(int row, int col)
         {
-            this.ItemType = itemType;
             this.rowIndex = row;
-            this.colIndex = col;
+            this.columnIndex = col;
         }
+    }
 
-        protected void attacked()
-        {
+    public enum ItemType
+    {
+        EliminatedCell,
 
-        }
+        NormalCell,
+
+        IceCell,//会被附近的消除影响
+
+        BlockCell,//不会被附近的消除影响
     }
 }
