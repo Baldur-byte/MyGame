@@ -296,7 +296,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Game04
+  m_Text: "\u8C61\u68CB"
 --- !u!222 &790473143
 CanvasRenderer:
   m_ObjectHideFlags: 0

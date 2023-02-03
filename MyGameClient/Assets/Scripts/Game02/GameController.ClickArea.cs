@@ -8,8 +8,8 @@ namespace Game02
 {
     public partial class GameController : IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        private ItemBase CurSelectCell = null;
-        private ItemBase LastSelectCell = null;
+        private FruitItem CurSelectItem = null;
+        private FruitItem LastSelectItem = null;
         private int CurPointerId;
 
         private bool isMouseDown = false;
@@ -20,10 +20,31 @@ namespace Game02
             CurPointerId = InEventData.pointerId;
             if (InEventData.pointerEnter != null)
             {
-                var temp = InEventData.pointerEnter.GetComponentInParent<ItemBase>();
+                var temp = InEventData.pointerEnter.GetComponentInParent<FruitItem>();
                 if (temp)
                 {
-                    LastSelectCell = temp;
+                    temp.Selected();
+                    if(LastSelectItem == null)
+                    {
+                        LastSelectItem = temp;
+                    }
+                    else
+                    {
+                        CurSelectItem = temp;
+                        if (CurSelectItem != null && LastSelectItem != null)
+                        {
+                            if (canExchange(CurSelectItem, LastSelectItem))
+                            {
+                                StartCoroutine(ExchangeAndMatch());
+                            }
+                            else
+                            {
+                                LastSelectItem.UnSelected();
+                                LastSelectItem = CurSelectItem;
+                                CurSelectItem = null;
+                            }
+                        }
+                    }
                     OnMouseDown(temp);
                 }
             }
@@ -32,7 +53,7 @@ namespace Game02
         public void OnDrag(PointerEventData InEventData)
         {
             if (Input.touchCount > 1) return;
-            if (LastSelectCell == null) return;
+            if (LastSelectItem == null) return;
 
             if (InEventData.pointerId == CurPointerId)
             {
@@ -48,19 +69,18 @@ namespace Game02
                 if (Mathf.Abs(m_fingerMoveX) < 0.1f && Mathf.Abs(m_fingerMoveY) < 0.1f)
                     return;
 
-                //滑动量太大，取消选择
-                if (Mathf.Abs(m_fingerMoveX) > 0.5 || Mathf.Abs(m_fingerMoveY) > 0.5)
-                {
-                    CurSelectCell = null;
-                    return;
-                }
                 if (Mathf.Abs(m_fingerMoveX) > Mathf.Abs(m_fingerMoveY))
                 {
-                    CurSelectCell = GetFruitItem(LastSelectCell.rowIndex, LastSelectCell.colIndex + (m_fingerMoveX > 0 ? 1 : -1));
+                    CurSelectItem = GetFruitItem(LastSelectItem.rowIndex, LastSelectItem.columnIndex + (m_fingerMoveX > 0 ? 1 : -1));
                 }
                 else if (Mathf.Abs(m_fingerMoveX) < Mathf.Abs(m_fingerMoveY))
                 {
-                    CurSelectCell = GetFruitItem(LastSelectCell.rowIndex + (m_fingerMoveY > 0 ? 1 : -1), LastSelectCell.colIndex);
+                    CurSelectItem = GetFruitItem(LastSelectItem.rowIndex + (m_fingerMoveY > 0 ? 1 : -1), LastSelectItem.columnIndex);
+                }
+
+                if (CurSelectItem != null && LastSelectItem != null)
+                {
+                    StartCoroutine(ExchangeAndMatch());
                 }
             }
         }
@@ -71,16 +91,12 @@ namespace Game02
             {
                 OnMouseUp();
             }
-
-            LastSelectCell = null;
-            CurSelectCell = null;
-            CurPointerId = 0;
         }
 
-        public void OnMouseDown(ItemBase item)
+        public void OnMouseDown(FruitItem item)
         {
             isMouseDown = true;
-            if(item.ItemType != ItemType.Eliminated)
+            if(item.ItemType != ItemType.EliminatedCell)
             {
                 
             }
@@ -89,14 +105,19 @@ namespace Game02
         public void OnMouseUp()
         {
             isMouseDown = false;
-            if(CurSelectCell != null && LastSelectCell != null)
-            {
-                StartCoroutine(ExchangeAndMatch(CurSelectCell, LastSelectCell));
-            }
         }
 
-        IEnumerator ExchangeAndMatch(ItemBase item1, ItemBase item2)
+        IEnumerator ExchangeAndMatch()
         {
+            InputLockManager.Instance.Lock();
+            FruitItem item1 = CurSelectItem;
+            FruitItem item2 = LastSelectItem;
+            CurSelectItem = null;
+            LastSelectItem = null;
+
+            item1.UnSelected();
+            item2.UnSelected();
+
             yield return Exchange(item1, item2);
             if (checkHorizontalMatch() || checkVerticalMatch())
             {
@@ -107,27 +128,29 @@ namespace Game02
                 // 没有任何水果匹配，交换回来
                 yield return Exchange(item1, item2);
             }
+            InputLockManager.Instance.UnLock();
         }
 
         IEnumerator Exchange(ItemBase item1, ItemBase item2)
         {
-            items[item1.rowIndex][item1.colIndex] = item2;
-            items[item2.rowIndex][item2.colIndex] = item1;
-
             int tmp = 0;
             tmp = item1.rowIndex;
             item1.rowIndex = item2.rowIndex;
             item2.rowIndex = tmp;
 
-            tmp = item1.colIndex;
-            item1.colIndex = item2.colIndex;
-            item2.colIndex = tmp;
+            tmp = item1.columnIndex;
+            item1.columnIndex = item2.columnIndex;
+            item2.columnIndex = tmp;
 
-            item1.gameObject.name = $"item({item1.rowIndex},{item1.colIndex})";
-            item2.gameObject.name = $"item({item2.rowIndex},{item2.colIndex})";
-            setCellPositonWithAni(item1, true);
-            setCellPositonWithAni(item2, true);
+            refreshItem(item1);
+            refreshItem(item2);
+
             yield return new WaitForSeconds(movedownTime);
+        }
+
+        private bool canExchange(ItemBase item1, ItemBase item2)
+        {
+            return (Mathf.Abs(item1.rowIndex - item2.rowIndex) + Mathf.Abs(item1.columnIndex - item2.columnIndex))==1;
         }
     }
 }
