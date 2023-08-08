@@ -45,7 +45,7 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8943810871839469106}
-  m_CullTransparentMesh: 1
+  m_CullTransparentMesh: 0
 --- !u!114 &8943810871839469104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82,9 +82,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8943810872892030281}
-  - component: {fileID: 8943810872892030287}
-  - component: {fileID: 8943810872892030284}
   - component: {fileID: 1245844228639171592}
+  - component: {fileID: 5692450722237958423}
+  - component: {fileID: 3060720003857169029}
   m_Layer: 5
   m_Name: InputLock
   m_TagString: Untagged
@@ -113,15 +113,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &8943810872892030287
-CanvasRenderer:
+--- !u!114 &1245844228639171592
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8943810872892030280}
-  m_CullTransparentMesh: 1
---- !u!223 &8943810872892030284
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 569baf28b92a4f34d93247924e4ff8f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mLockPanel: {fileID: 8943810871839469106}
+--- !u!223 &5692450722237958423
 Canvas:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -142,7 +147,7 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 32767
   m_TargetDisplay: 0
---- !u!114 &1245844228639171592
+--- !u!114 &3060720003857169029
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -151,7 +156,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8943810872892030280}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 569baf28b92a4f34d93247924e4ff8f4, type: 3}
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mLockPanel: {fileID: 8943810871839469106}
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295

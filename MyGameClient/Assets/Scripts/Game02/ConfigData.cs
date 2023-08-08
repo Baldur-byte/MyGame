@@ -16,8 +16,10 @@ namespace Game02
 
         public const float CELL_OFFSET = 1;
 
-        public const int ROW_COUNT = 10;
+        public const int ROW_COUNT = 14;
 
         public const int COLUMN_COUNT = 16;
+
+        public const int IGNORE_ROW = 4;
     }
 }

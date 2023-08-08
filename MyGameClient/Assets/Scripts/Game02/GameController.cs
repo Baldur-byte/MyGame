@@ -19,6 +19,8 @@ namespace Game02
 
         private float movedownTime = 0.6f;
 
+        private int lastRemoveCol = -1;
+
         private void Awake()
         {
             FruitRoot = transform.Find("FruitRoot").GetComponent<Transform>();
@@ -63,7 +65,7 @@ namespace Game02
         private void setCellPositonWithAni(ItemBase item, bool isWithAni = false)
         {
             float x = (item.columnIndex - ConfigData.COLUMN_COUNT / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
-            float y = (item.rowIndex - ConfigData.ROW_COUNT / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
+            float y = (item.rowIndex - (ConfigData.ROW_COUNT - ConfigData.IGNORE_ROW) / 2) * ConfigData.CELL_SIZE + ConfigData.CELL_SIZE / 2;
             //float x = (item.colIndex - ConfigData.COLUMN_COUNT / 2) * ConfigData.CELL_OFFSET + ConfigData.CELL_OFFSET / 2;
             //float y = (item.rowIndex - ConfigData.ROW_COUNT / 2) * ConfigData.CELL_OFFSET + ConfigData.CELL_OFFSET / 2;
             if (isWithAni)
@@ -86,11 +88,11 @@ namespace Game02
                 yield return new WaitForSeconds(eliminatedTime);
 
                 //上面的掉落下来，
-                DropDownOtherCell();
+                yield return DropDownOtherCell();
 
                 itemsToEliminate.Clear();
 
-                yield return new WaitForSeconds(movedownTime);
+                //yield return new WaitForSeconds(movedownTime);
                 yield return autoCheckMap();
             }
             yield return null;
@@ -105,7 +107,7 @@ namespace Game02
             }
         }
 
-        private void DropDownOtherCell()
+        private IEnumerator DropDownOtherCell()
         {
             for (int i = 0; i < itemsToEliminate.Count; i++)
             {
@@ -115,27 +117,28 @@ namespace Game02
                     for (int j = fruit.rowIndex + 1; j < ConfigData.ROW_COUNT; ++j)
                     {
                         var item = GetFruitItem(j, fruit.columnIndex);
-                        item.rowIndex--;
+                        item.rowIndex--; 
                         refreshItem(item);
                     }
                     ReuseRemovedCell(fruit);
                 }
             }
+            yield return new WaitForSeconds(movedownTime);
         }
 
         private void ReuseRemovedCell(FruitItem item)
         {
             Destroy(item.gameObject);
-            item = createRandomCellItem(ConfigData.ROW_COUNT, item.columnIndex);
+            item = createRandomCellItem(ConfigData.ROW_COUNT - 1, item.columnIndex);
             setCellPositonWithAni(item);
-            item.rowIndex--; 
+            //item.rowIndex--; 
             refreshItem(item);
         }
 
         private bool checkHorizontalMatch()
         {
             bool isMatch = false;
-            for (int rowIndex = 0; rowIndex < ConfigData.ROW_COUNT; rowIndex++)
+            for (int rowIndex = 0; rowIndex < ConfigData.ROW_COUNT - ConfigData.IGNORE_ROW; rowIndex++)
             {
                 for (int columIndex = 0; columIndex < ConfigData.COLUMN_COUNT - 2; columIndex++)
                 {
@@ -159,7 +162,7 @@ namespace Game02
             bool isMatch = false;
             for (int columIndex = 0; columIndex < ConfigData.COLUMN_COUNT; columIndex++)
             {
-                for (int rowIndex = 0; rowIndex < ConfigData.ROW_COUNT - 2; rowIndex++)
+                for (int rowIndex = 0; rowIndex < ConfigData.ROW_COUNT - ConfigData.IGNORE_ROW - 2; rowIndex++)
                 {
                     var item1 = GetFruitItem(rowIndex, columIndex);
                     var item2 = GetFruitItem(rowIndex + 1, columIndex);
@@ -198,8 +201,11 @@ namespace Game02
 
         private void refreshItem(ItemBase item)
         {
-            items[item.rowIndex][item.columnIndex] = item;
-            item.gameObject.name = $"item({item.rowIndex},{item.columnIndex})";
+            if(item.rowIndex < ConfigData.ROW_COUNT)
+            {
+                items[item.rowIndex][item.columnIndex] = item;
+                item.gameObject.name = $"item({item.rowIndex},{item.columnIndex})";
+            }
             setCellPositonWithAni(item, true);
         }
     }
